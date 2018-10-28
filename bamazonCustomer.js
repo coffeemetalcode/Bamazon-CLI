@@ -13,21 +13,32 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
   if (err) throw err;
+  bamazon();
 });
 
-listProd();
-bamazon();
+// testDB();
+
+function testDB() {
+  var query = "SELECT product_name, price FROM products WHERE item_id=1;";
+  connection.query(query, function(err, res) {
+    // console.log("Product: " + res.product_name + " Price: " + res.price);
+    console.log("Product: " + res[0].product_name);
+    // console.log(res);
+  });
+}
+
+// bamazon();
 
 // the listProd function
 function listProd() {
   // fetch all the available store items from db here and display them to the user
-  connection.query("SELECT * FROM products", function(error, result) {
-    for (var i = 0; i < result.length; i++) {
+  connection.query("SELECT * FROM products", function(err, res) {
+    for (var i = 0; i < res.length; i++) {
       // TODO: Figure out a way to improve the output formatting
       console.log(
-        `ID: ${result[i].item_id}, Item: ${
-          result[i].product_name
-        }, Department: ${result[i].department_name}, Price: ${result[i].price}`
+        `ID: ${res[i].item_id}, Item: ${res[i].product_name}, Department: ${
+          res[i].department_name
+        }, Price: ${res[i].price}`
       );
     }
   });
@@ -35,22 +46,42 @@ function listProd() {
 
 // the bamazon function
 function bamazon() {
+  listProd();
   inquirer
-    .prompt({
-      name: "product",
-      type: "input",
-      message: "Please specify a product ID."
-    })
-    .then(function(answer) {
-      var query = "SELECT product_name, price FROM products WHERE ?";
-      connection.query(
-        query,
-        { input: answer.product_id, product: answer.product_name },
-        function(err, res) {
+    .prompt([
+      {
+        name: "product",
+        type: "input",
+        message: "Please specify a product ID."
+      },
+      {
+        name: "quantity",
+        type: "input",
+        message: "How many?"
+      }
+    ])
+    .then(function(answers) {
+      var query =
+        "SELECT product_name, price, stock_quantity FROM bamazon.products WHERE ?";
+      connection.query(query, { item_id: answers.product }, function(err, res) {
+        var onHand = res[0].stock_quantity;
+        var desired = answers.quantity;
+        if (onHand >= desired) {
+          connection.query(
+            `UPDATE products SET stock_quantity=${onHand -
+              desired} WHERE item_id=${answers.product}`
+          );
           console.log(
-            `Product: ${answer.product_name}, Price: ${answer.price}`
+            `${desired} ${
+              res[0].product_name
+            } added to your cart for ${desired *
+              res[0].price}. Thank you for shopping.`
+          );
+        } else {
+          console.log(
+            "Sorry, there aren't enough " + res[0].product_name + "."
           );
         }
-      );
+      });
     });
 }
