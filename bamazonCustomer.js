@@ -11,10 +11,13 @@ var connection = mysql.createConnection({
   database: "bamazon"
 });
 
+// Connect to MySql. Run Bamazon.
 connection.connect(function(err) {
   if (err) throw err;
   bamazon();
 });
+
+// I was having difficulty getting modified code from the class assignment to work, so I scrapped it and started with a basic function to test the database connection and get back data.
 
 // testDB();
 
@@ -26,8 +29,6 @@ function testDB() {
     // console.log(res);
   });
 }
-
-// bamazon();
 
 // the listProd function
 function listProd() {
@@ -48,12 +49,15 @@ function listProd() {
 function bamazon() {
   listProd();
   inquirer
+  // prompt user to select a product from the list.
+  // Given time, I would make this into a type: 'list' for inquirer which would fetch all items from the store and allow the user to choose an item by highlighing it. Seems like a fun challenge to do this dynamically with a js for loop. Not sure if it's even possible.
     .prompt([
       {
         name: "product",
         type: "input",
         message: "Please specify a product ID."
       },
+      // get the quantity.
       {
         name: "quantity",
         type: "input",
@@ -61,12 +65,14 @@ function bamazon() {
       }
     ])
     .then(function(answers) {
+      // a MySql query that resists attempts at injection
       var query =
         "SELECT product_name, price, stock_quantity FROM bamazon.products WHERE ?";
       connection.query(query, { item_id: answers.product }, function(err, res) {
         var onHand = res[0].stock_quantity;
         var desired = answers.quantity;
         if (onHand >= desired) {
+          // I was already familiar with MySql and SQL qeuries, and I got this to work without having to fiddle with it. Pretty much from here all-the-way down, I was able to just write the rest of the function without having to look at references, which was a good feeling.
           connection.query(
             `UPDATE products SET stock_quantity=${onHand -
               desired} WHERE item_id=${answers.product}`

@@ -1,3 +1,5 @@
+-- seeds.sql --
+
 -- populate the products table --
 
 USE bamazon;

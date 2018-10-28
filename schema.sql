@@ -1,3 +1,5 @@
+-- schema.sql --
+
 -- create bamazon database --
 
 DROP DATABASE IF EXISTS bamazon;
